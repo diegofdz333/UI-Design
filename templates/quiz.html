@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rhythm Rhythm - Quiz</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+</head>
+<body>
+  <div id="question-header">Question 1: What do you hear?</div>
+  <div class="quiz-container">
+    <button id="play-audio"></button>
+    <div class="options" id="options-container"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+</body>
+</html>

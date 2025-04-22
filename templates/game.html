@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rhythm Rhythm - Game</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+</head>
+<body>
+  <h1>Game Mode</h1>
+  <div id="note-track"></div>
+  <div id="feedback"></div>
+  <button id="tapButton" class="tap-button">Tap!</button>
+
+  <a href="{{ url_for('homepage') }}" class="home-button">Quit to Homescreen</a>
+
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
