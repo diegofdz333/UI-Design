@@ -1,10 +1,22 @@
-const signature = [1, 1, 1, 1, 1, 1];
-const tempo = 500;
+let lives = 5;
+let score = 0;
+let level = 0;
+let signature = [];
+let sigLength = 6;
+let tempo = 500;
+
+function generateSignature(length = 6) {
+  const sig = [];
+  for (let i = 0; i < length; i++) {
+    sig.push(Math.random() < 0.75 ? 1 : 0); // 75% chance for a note
+  }
+  return sig;
+}
 const noteImage = "/static/images/quarterNote.png";
 const restImage = "/static/images/restNote.png";
 const redNoteImage = "/static/images/quarterNoteRed.png";
 
-const threshold = 250;
+const threshold = 150;
 
 const noteTrack = document.getElementById("note-track");
 const feedback = document.getElementById("feedback");
@@ -43,7 +55,7 @@ function playIntermissionAudio(wait = 0) {
 
 function playQueue() {
   feedback.textContent = "Listen carefully!";
-  for (let i = 0; i < signature.length; i++) {
+  for (let i = 0; i < sigLength; i++) {
     setTimeout(() => {
       playAudio("/static/audio/tap.wav", 0.2);
     }, i * tempo);
@@ -56,6 +68,9 @@ function playQueue() {
 }
 
 function startGame() {
+  console.log("Start Game")
+  signature = generateSignature(sigLength);
+  updateUI();
   renderTrack();
 
   playIntermissionAudio();
@@ -92,6 +107,7 @@ function startGame() {
         setTimeout(() => {
           if (!expectedHits[i].hit) {
             playAudio("/static/audio/fail.mp3");
+            loseLife();
           }
         }, threshold + 50)
       }, (i + 1) * tempo);
@@ -101,6 +117,7 @@ function startGame() {
     setTimeout(() => {
       gameRunning = false;
       feedback.textContent = "Done!";
+    endRound();
     }, signature.length * tempo);
   }, signature.length * tempo + 1000 + tempo);
 }
@@ -119,6 +136,7 @@ function registerTap() {
   }
   if (!hit) {
     playAudio("/static/audio/fail.mp3");
+    loseLife();
     feedback.textContent = "Miss!";
     setTimeout(() => feedback.textContent = "", 500);
   }
@@ -136,3 +154,53 @@ tapButton.addEventListener("click", registerTap);
 
 // Auto start game
 startGame();
+
+function endRound() {
+  gameRunning = false;
+  if (lives <= 0) {
+    feedback.textContent = "Game Over!";
+    return;
+  }
+
+  score += ( 100 * (550 - tempo)) * sigLength;
+  level += 1;
+
+  if (level % 3 == 0) {
+    if (level % 6 == 0) {
+      sigLength += 1;
+    } else {
+      tempo -= 50;
+    }
+  }
+
+  updateUI();
+  setTimeout(() => {
+    startGame(); // loop to next level
+  }, 1500);
+}
+
+function loseLife() {
+  lives--;
+  updateUI();
+  if (lives <= 0) {
+    gameRunning = false;
+    feedback.textContent = "Game Over!";
+  }
+}
+
+function updateUI() {
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  if (scoreEl) scoreEl.textContent = `Score: ${score}`;
+  if (livesEl) {
+    livesEl.innerHTML = '';
+    for (let i = 0; i < lives; i++) {
+      const img = document.createElement('img');
+      img.src = '/static/images/heart.png';
+      img.alt = 'Heart';
+      img.style.width = '30px';
+      img.style.margin = '0 5px';
+      livesEl.appendChild(img);
+    }
+  }
+}
