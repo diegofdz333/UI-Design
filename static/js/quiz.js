@@ -1,114 +1,145 @@
 const questions = [
-    {
-      audio: "/static/audio/ballad.mp3",
-      correct: 0,
-      images: [
-        "/static/placeholders/img1.jpg",
-        "/static/placeholders/img2.jpg",
-        "/static/placeholders/img3.jpg",
-        "/static/placeholders/img4.jpg"
-      ]
-    },
-    {
-      audio: "/static/audio/q2.mp3",
-      correct: 2,
-      images: [
-        "/static/placeholders/img5.jpg",
-        "/static/placeholders/img6.jpg",
-        "/static/placeholders/img7.jpg",
-        "/static/placeholders/img8.jpg"
-      ]
-    },
-    {
-      audio: "/static/audio/q3.mp3",
-      correct: 1,
-      images: [
-        "/static/placeholders/img9.jpg",
-        "/static/placeholders/img10.jpg",
-        "/static/placeholders/img11.jpg",
-        "/static/placeholders/img12.jpg"
-      ]
-    },
-    {
-      audio: "/static/audio/q4.mp3",
-      correct: 3,
-      images: [
-        "/static/placeholders/img13.jpg",
-        "/static/placeholders/img14.jpg",
-        "/static/placeholders/img15.jpg",
-        "/static/placeholders/img16.jpg"
-      ]
-    },
-    {
-      audio: "/static/audio/q5.mp3",
-      correct: 2,
-      images: [
-        "/static/placeholders/img17.jpg",
-        "/static/placeholders/img18.jpg",
-        "/static/placeholders/img19.jpg",
-        "/static/placeholders/img20.jpg"
-      ]
-    }
-  ];
+  {
+    // we'll ignore `audio` here and build the measure manually
+    correct: 0,
+    images: [
+      "/static/placeholders/img1.jpg",
+      "/static/placeholders/img2.jpg",
+      "/static/placeholders/img3.jpg",
+      "/static/placeholders/img4.jpg"
+    ]
+  },
+  // … your other questions unchanged …
+  {
+    audio: "/static/audio/q2.mp3",
+    correct: 2,
+    images: [
+      "/static/placeholders/img5.jpg",
+      "/static/placeholders/img6.jpg",
+      "/static/placeholders/img7.jpg",
+      "/static/placeholders/img8.jpg"
+    ]
+  },
+  // etc.
+];
 
-  let currentQuestion = 0;
-  let score = 0;
-  const playAudioButton = document.getElementById("play-audio");
-  const questionHeader = document.getElementById("question-header");
-  const optionsContainer = document.getElementById("options-container");
+let currentQuestion = 0;
+let score = 0;
+const playAudioButton = document.getElementById("play-audio");
+const questionHeader = document.getElementById("question-header");
+const optionsContainer = document.getElementById("options-container");
 
-  let audio = new Audio();
-  let playing = false;
+let audio = null;
+let playing = false;
+let timeouts = [];
 
-  function renderQuestion() {
-    const q = questions[currentQuestion];
-    questionHeader.textContent = `Question ${currentQuestion + 1}: What do you hear?`;
-    optionsContainer.innerHTML = "";
+function clearScheduled() {
+  timeouts.forEach(clearTimeout);
+  timeouts = [];
+}
 
-    q.images.forEach((src, index) => {
-      const img = document.createElement("img");
-      img.src = src;
-      img.onclick = () => handleAnswer(index);
-      optionsContainer.appendChild(img);
-    });
+function playRhythm() {
+  const bpm = 60;               // 60 BPM → 1 beat/sec
+  const beatMs = 60000 / bpm;   // ms per quarter note
 
-    playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
-    audio = new Audio(q.audio);
+  // Metronome clicks on every beat: 1, 2, 3, 4
+  for (let i = 0; i < 4; i++) {
+    timeouts.push(setTimeout(() => {
+      new Audio("/static/audio/tap.wav").play();
+    }, i * beatMs));
+  }
+
+  // Notes on 1, the “&” of 2 (i.e. 1.5), 3, and 4
+  [0, 1.5 * beatMs, 2 * beatMs, 3 * beatMs].forEach(t => {
+    timeouts.push(setTimeout(() => {
+      new Audio("/static/audio/note.mp3").play();
+    }, t));
+  });
+
+  // When the bar ends, reset
+  timeouts.push(setTimeout(() => {
     playing = false;
-  }
+    playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
+  }, 4 * beatMs));
+}
 
-  function handleAnswer(selectedIndex) {
-    if (selectedIndex === questions[currentQuestion].correct) {
-      score++;
-    }
-    currentQuestion++;
+function renderQuestion() {
+  const q = questions[currentQuestion];
+  questionHeader.textContent = `Question ${currentQuestion + 1}: What do you hear?`;
+  optionsContainer.innerHTML = "";
+
+  q.images.forEach((src, idx) => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.onclick = () => handleAnswer(idx);
+    optionsContainer.appendChild(img);
+  });
+
+  // reset any scheduled audio
+  clearScheduled();
+  playing = false;
+  playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
+
+  // for non-built rhythms, load the single clip
+  if (q.audio) {
+    audio = new Audio(q.audio);
+  } else {
+    audio = null;
+  }
+}
+
+function handleAnswer(selectedIndex) {
+  if (selectedIndex === questions[currentQuestion].correct) {
+    score++;
+  }
+  currentQuestion++;
+  // stop anything playing
+  if (audio) {
     audio.pause();
-      audio.currentTime = 0;
-      playing = false;
-      playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
-    if (currentQuestion < questions.length) {
-      renderQuestion();
-    } else {
-      window.location.href = `/quiz_result?score=${score}`;
-    }
+    audio.currentTime = 0;
+  } else {
+    clearScheduled();
   }
+  playing = false;
+  playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
-  playAudioButton.onclick = () => {
-    if (!playing) {
-      audio.currentTime = 0;
-      audio.play();
-      playing = true;
-      playAudioButton.style.backgroundImage = "url('/static/images/stopButton.png')";
-      audio.onended = () => {
-        playing = false;
-        playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
-      };
-    } else {
+  if (currentQuestion < questions.length) {
+    renderQuestion();
+  } else {
+    window.location.href = `/quiz_result?score=${score}`;
+  }
+}
+
+playAudioButton.onclick = () => {
+  // if we're already playing, stop everything
+  if (playing) {
+    if (audio) {
       audio.pause();
       audio.currentTime = 0;
+    } else {
+      clearScheduled();
+    }
+    playing = false;
+    playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
+    return;
+  }
+
+  // start playback
+  playing = true;
+  playAudioButton.style.backgroundImage = "url('/static/images/stopButton.png')";
+
+  if (currentQuestion === 0 && !questions[0].audio) {
+    // first question: build our 1-measure rhythm
+    playRhythm();
+  } else if (audio) {
+    // fallback: just play the single clip
+    audio.currentTime = 0;
+    audio.play();
+    audio.onended = () => {
       playing = false;
       playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
-    }
-  };
+    };
+  }
+};
 
-  renderQuestion();
+renderQuestion();
