@@ -1,12 +1,12 @@
 const questions = [
   {
     // we'll ignore `audio` here and build the measure manually
-    correct: 0,
+    correct: 2,
     images: [
-      "/static/placeholders/img1.jpg",
-      "/static/placeholders/img2.jpg",
-      "/static/placeholders/img3.jpg",
-      "/static/placeholders/img4.jpg"
+      "/static/quizChoices/rhythm-1.png",
+      "/static/quizChoices/rhythm-2.png",
+      "/static/quizChoices/rhythm-3.png",
+      "/static/quizChoices/rhythm-4.png"
     ]
   },
   // … your other questions unchanged …
