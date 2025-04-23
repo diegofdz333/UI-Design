@@ -6,11 +6,26 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
 </head>
 <body>
-  <div id="question-header">Question 1: What do you hear?</div>
-  <div class="quiz-container">
-    <button id="play-audio"></button>
-    <div class="options" id="options-container"></div>
-  </div>
+<!-- Question Header -->
+<div id="question-header">Question 1: What do you hear?</div>
+
+<!-- Spacer to add space below question text -->
+<div class="spacer"></div>
+
+<!-- Quiz container with play button and choices -->
+<div class="quiz-container">
+  <button id="play-audio"></button>
+  <div class="options" id="options-container"></div>
+</div>
+
+<!-- Text progress (e.g., Question 2 of 4) -->
+<div id="progress-bar">Question 1 of 4</div>
+
+<!-- Visual progress bar -->
+<div id="visual-progress">
+  <div id="visual-fill"></div>
+</div>
+
 
   <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
 </body>

@@ -1,6 +1,9 @@
+// quiz.js
+// Five custom-built rhythm quiz questions (all using playRhythm)
+
 const questions = [
   {
-    // we'll ignore `audio` here and build the measure manually
+    // Original Question 1: one-measure rhythm (quarter, eighth, quarter, quarter)
     correct: 2,
     images: [
       "/static/quizChoices/rhythm-1.png",
@@ -9,18 +12,36 @@ const questions = [
       "/static/quizChoices/rhythm-4.png"
     ]
   },
-  // … your other questions unchanged …
   {
-    audio: "/static/audio/q2.mp3",
-    correct: 2,
+    // Question 2: syncopation on 1, & of 2, 3, 4
+    correct: 0,
     images: [
-      "/static/placeholders/img5.jpg",
-      "/static/placeholders/img6.jpg",
-      "/static/placeholders/img7.jpg",
-      "/static/placeholders/img8.jpg"
+      "/static/quizChoices/rhythm-1.png",
+      "/static/quizChoices/rhythm-3.png",
+      "/static/quizChoices/rhythm-4.png",
+      "/static/quizChoices/rhythm-2.png"
     ]
   },
-  // etc.
+  {
+    // Question 3: off-beat accents (& of 1, 2, & of 3, 4)
+    correct: 1,
+    images: [
+      "/static/quizChoices/rhythm-4.png",
+      "/static/quizChoices/rhythm-2.png",
+      "/static/quizChoices/rhythm-1.png",
+      "/static/quizChoices/rhythm-3.png"
+    ]
+  },
+  {
+    // Question 4: half-note pulse (beats 1 and 3 only)
+    correct: 3,
+    images: [
+      "/static/quizChoices/rhythm-3.png",
+      "/static/quizChoices/rhythm-1.png",
+      "/static/quizChoices/rhythm-2.png",
+      "/static/quizChoices/rhythm-4.png"
+    ]
+  },
 ];
 
 let currentQuestion = 0;
@@ -29,7 +50,6 @@ const playAudioButton = document.getElementById("play-audio");
 const questionHeader = document.getElementById("question-header");
 const optionsContainer = document.getElementById("options-container");
 
-let audio = null;
 let playing = false;
 let timeouts = [];
 
@@ -38,29 +58,39 @@ function clearScheduled() {
   timeouts = [];
 }
 
-function playRhythm() {
-  const bpm = 60;               // 60 BPM → 1 beat/sec
-  const beatMs = 60000 / bpm;   // ms per quarter note
+function playRhythm(offsetBeats) {
+  const bpm = 60;
+  const beatMs = 60000 / bpm;
 
-  // Metronome clicks on every beat: 1, 2, 3, 4
+  // Metronome click on every beat
   for (let i = 0; i < 4; i++) {
     timeouts.push(setTimeout(() => {
       new Audio("/static/audio/tap.wav").play();
     }, i * beatMs));
   }
 
-  // Notes on 1, the “&” of 2 (i.e. 1.5), 3, and 4
-  [0, 1.5 * beatMs, 2 * beatMs, 3 * beatMs].forEach(t => {
+  // Play notes at given offsets
+  offsetBeats.forEach(beat => {
     timeouts.push(setTimeout(() => {
       new Audio("/static/audio/note.mp3").play();
-    }, t));
+    }, beat * beatMs));
   });
 
-  // When the bar ends, reset
+  // Reset after bar
   timeouts.push(setTimeout(() => {
     playing = false;
     playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
   }, 4 * beatMs));
+}
+
+function getPatternOffsets(idx) {
+  const patterns = [
+    [0, 2, 2.5, 3],
+    [0, 1, 1.5, 3],
+    [0, 1.5, 2, 3], 
+    [0, 1, 1.5, 2, 3]
+  ];
+  return patterns[idx];
 }
 
 function renderQuestion() {
@@ -75,31 +105,27 @@ function renderQuestion() {
     optionsContainer.appendChild(img);
   });
 
-  // reset any scheduled audio
   clearScheduled();
   playing = false;
   playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
-  // for non-built rhythms, load the single clip
-  if (q.audio) {
-    audio = new Audio(q.audio);
-  } else {
-    audio = null;
-  }
+  // update progress bar here:
+  document.getElementById("progress-bar").textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+
+  // Update progress text
+document.getElementById("progress-bar").textContent =
+`Question ${currentQuestion + 1} of ${questions.length}`;
+
+// Update visual progress fill
+const percent = ((currentQuestion + 1) / questions.length) * 100;
+document.getElementById("visual-fill").style.width = `${percent}%`;
 }
 
+
 function handleAnswer(selectedIndex) {
-  if (selectedIndex === questions[currentQuestion].correct) {
-    score++;
-  }
+  if (selectedIndex === questions[currentQuestion].correct) score++;
   currentQuestion++;
-  // stop anything playing
-  if (audio) {
-    audio.pause();
-    audio.currentTime = 0;
-  } else {
-    clearScheduled();
-  }
+  clearScheduled();
   playing = false;
   playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
@@ -111,35 +137,19 @@ function handleAnswer(selectedIndex) {
 }
 
 playAudioButton.onclick = () => {
-  // if we're already playing, stop everything
   if (playing) {
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    } else {
-      clearScheduled();
-    }
+    clearScheduled();
     playing = false;
     playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
     return;
   }
 
-  // start playback
   playing = true;
   playAudioButton.style.backgroundImage = "url('/static/images/stopButton.png')";
 
-  if (currentQuestion === 0 && !questions[0].audio) {
-    // first question: build our 1-measure rhythm
-    playRhythm();
-  } else if (audio) {
-    // fallback: just play the single clip
-    audio.currentTime = 0;
-    audio.play();
-    audio.onended = () => {
-      playing = false;
-      playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
-    };
-  }
+  const offsets = getPatternOffsets(currentQuestion);
+  playRhythm(offsets);
 };
 
+// Start
 renderQuestion();

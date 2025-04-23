@@ -47,3 +47,31 @@ body {
   .options img:hover {
     filter: brightness(0.9);
   }
+
+  .spacer {
+    margin-bottom: 1em;
+  }
+  
+  #progress-bar {
+    margin-top: 2em;
+    font-size: 1em;
+    color: #555;
+  }
+  
+  #visual-progress {
+    width: 25%; /* ⬅️ less wide than before */
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+    margin: 1em auto 2em auto;
+    overflow: hidden;
+  }
+  
+  #visual-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #444; /* ⬅️ dark gray instead of green */
+    transition: width 0.3s ease-in-out;
+  }
+  
+  
