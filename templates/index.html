@@ -6,8 +6,71 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
-  <h1 style="font-size: 3em; margin-top: 2em;">Rhythm Rhythm</h1>
-  <a href="{{ url_for('game') }}" class="button">Start</a>
+  <svg id="animated-bg" style="position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <g id="bubble">
+        <image width="75px" href="/static/images/musicNoteSVG.svg" />
+      </g>
+    </defs>
+    <!-- Generate multiple bubble instances -->
+    <use href="#bubble" x="20" >
+      <animateTransform attributeName="transform" type="translate"
+        from="20,1000" to="20,-100" dur="10s" repeatCount="indefinite" />
+    </use>
+  
+    <use href="#bubble" x="100" >
+      <animateTransform attributeName="transform" type="translate"
+        from="100,1050" to="100,-120" dur="12s" repeatCount="indefinite" />
+    </use>
+  
+    <use href="#bubble" x="200" >
+      <animateTransform attributeName="transform" type="translate"
+        from="200,950" to="200,-100" dur="8s" repeatCount="indefinite" />
+    </use>
+  
+    <use href="#bubble" x="300" >
+      <animateTransform attributeName="transform" type="translate"
+        from="300,1100" to="300,-120" dur="11s" repeatCount="indefinite" />
+    </use>
+  
+    <use href="#bubble" x="400" >
+      <animateTransform attributeName="transform" type="translate"
+        from="400,1020" to="400,-100" dur="9s" repeatCount="indefinite" />
+    </use>
+  
+    <use href="#bubble" x="500" >
+      <animateTransform attributeName="transform" type="translate"
+        from="500,1040" to="500,-150" dur="13s" repeatCount="indefinite" />
+    </use>
+
+    <use href="#bubble" x="600" >
+      <animateTransform attributeName="transform" type="translate"
+        from="600,990" to="600,-100" dur="10s" repeatCount="indefinite" />
+    </use>
+
+    <use href="#bubble" x="700" >
+      <animateTransform attributeName="transform" type="translate"
+        from="700,1200" to="700,-100" dur="8s" repeatCount="indefinite" />
+    </use>
+
+    <use href="#bubble" x="800" >
+      <animateTransform attributeName="transform" type="translate"
+        from="800,1100" to="800,-100" dur="9s" repeatCount="indefinite" />
+    </use>
+
+    <use href="#bubble" x="900" >
+      <animateTransform attributeName="transform" type="translate"
+        from="900,1150" to="900,-100" dur="12s" repeatCount="indefinite" />
+    </use>
+
+    <use href="#bubble" x="1000" >
+      <animateTransform attributeName="transform" type="translate"
+        from="1000,1000" to="1000,-100" dur="9s" repeatCount="indefinite" />
+    </use>
+  </svg>
+  
+  <h1 style="font-size: 3em; margin-top: 2em;" id="title">Rhythm Rhythm</h1>
+  <a href="{{ url_for('game') }}" class="button" id="start-button">Start Game</a>
   <a href="{{ url_for('quiz') }}" class="button">Quiz</a>
 </body>
 </html>
