@@ -123,18 +123,38 @@ document.getElementById("visual-fill").style.width = `${percent}%`;
 
 
 function handleAnswer(selectedIndex) {
-  if (selectedIndex === questions[currentQuestion].correct) score++;
+  const q = questions[currentQuestion];
+  const images = document.querySelectorAll(".options img");
+
+  // Mark all images unclickable
+  images.forEach(img => {
+    img.onclick = null;
+  });
+
+  // Highlight selected
+  if (selectedIndex === q.correct) {
+    images[selectedIndex].classList.add("correct");
+    score++;
+  } else {
+    images[selectedIndex].classList.add("wrong");
+    images[q.correct].classList.add("correct"); // show correct one
+  }
+
   currentQuestion++;
   clearScheduled();
   playing = false;
   playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
-  if (currentQuestion < questions.length) {
-    renderQuestion();
-  } else {
-    window.location.href = `/quiz_result?score=${score}`;
-  }
+  // Proceed to next question after short delay
+  setTimeout(() => {
+    if (currentQuestion < questions.length) {
+      renderQuestion();
+    } else {
+      window.location.href = `/quiz_result?score=${score}`;
+    }
+  }, 1000); // 1 second pause to show feedback
 }
+
 
 playAudioButton.onclick = () => {
   if (playing) {

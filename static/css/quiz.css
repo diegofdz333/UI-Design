@@ -51,6 +51,21 @@ body {
   .spacer {
     margin-bottom: 1em;
   }
+
+  .correct {
+    border: 3px solid #4CAF50 !important; /* green */
+    box-shadow: 0 0 10px #4CAF50;
+  }
+  
+  .wrong {
+    border: 3px solid #e53935 !important; /* red */
+    box-shadow: 0 0 10px #e53935;
+  }
+  
+  .options img {
+    transition: all 0.2s ease;
+  }
+  
   
   #progress-bar {
     margin-top: 2em;
