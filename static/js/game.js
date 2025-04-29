@@ -85,8 +85,25 @@ function startGame() {
     gameRunning = true;
     playStartTime = performance.now() + tempo;
     expectedHits = signature.map((val, i) =>
-      val === 1 ? { time: playStartTime + i * tempo, hit: false } : null
+      val === 1 ? { 
+        time: playStartTime + i * tempo,
+        hit: false,
+        missed: false,
+      } : null
     );
+
+    for (let i = 0; i < signature.length; i++) {
+      setTimeout(() => {
+        // highlight current note
+        const img = noteTrack.children[i];
+        if (signature[i] === 1 && img) {
+          img.src = redNoteImage;
+          setTimeout(() => {
+            img.src = noteImage;
+          }, threshold * 2);
+        }
+      }, (i + 1) * tempo - threshold);
+    }
 
     for (let i = 0; i < signature.length; i++) {
       setTimeout(() => {
@@ -95,17 +112,9 @@ function startGame() {
         const now = performance.now();
         console.log(now - expectedHits[i].time)
 
-        // highlight current note
-        const img = noteTrack.children[i];
-        if (signature[i] === 1 && img) {
-          img.src = redNoteImage;
-          setTimeout(() => {
-            img.src = noteImage;
-          }, threshold);
-        }
-
         setTimeout(() => {
-          if (!expectedHits[i].hit) {
+          if (!expectedHits[i].hit && !expectedHits[i].missed) {
+            expectedHits[i].missed = true;
             playAudio("/static/audio/fail.mp3");
             loseLife();
           }
@@ -125,16 +134,29 @@ function startGame() {
 function registerTap() {
   if (!gameRunning) return;
   const now = performance.now();
-  let hit = false;
+  let miss = true;
   for (const expected of expectedHits) {
     if (expected && !expected.hit && Math.abs(now - expected.time) <= threshold) {
       expected.hit = true;
-      hit = true;
+      miss = false;
       playAudio("/static/audio/note.mp3");
       break;
     }
+    // Give leaway in double counting misses
+    if (expected && expected.miss && Math.abs(now - expected.time) <= threshold * 2) {
+      miss = false;
+      break;
+    }
   }
-  if (!hit) {
+  if (miss) {
+    // Give leaway in double counting misses
+    for (const expected of expectedHits) {
+      if (expected && !expected.miss && Math.abs(now - expected.time) <= threshold * 2) {
+        expected.miss = true;
+        break;
+      }
+    }
+
     playAudio("/static/audio/fail.mp3");
     loseLife();
     feedback.textContent = "Miss!";
