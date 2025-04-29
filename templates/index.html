@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
+  <button id="music-toggle" 
+        style="position: absolute; top: 10px; left: 10px; z-index: 10; 
+               font-size: 1.5em; padding: 15px 25px; background-color: white; 
+               color: black; border: 2px solid black; border-radius: 5px; cursor: pointer;">
+    🔊 Music On
+</button>
+
+
   <svg id="animated-bg" style="position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%;" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <g id="bubble">
@@ -73,5 +81,6 @@
   <h1 style="font-size: 3em; margin-top: 2em;" id="title">Rhythm Rhythm</h1>
   <button class="button" id="start-button" onclick="window.location='{{ url_for('game') }}'">Play Game</button>
   <button class="button" onclick="window.location='{{ url_for('quiz') }}'">Quiz</button>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>
