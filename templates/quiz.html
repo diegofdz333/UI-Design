@@ -28,7 +28,7 @@
 </div>
 
 <!-- Back to Homepage button -->
-<a href="{{ url_for('homepage') }}" class="home-button">Quit to Homescreen</a>
+<button class="home-button" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
 
 <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
 </body>
