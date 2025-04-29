@@ -1,22 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Rhythm Rhythm - Game</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
-</head>
-<body>
-  <h1>Game Mode</h1>
-  <div id="score" style="font-size: 1.2em; margin-bottom: 0.5em;">Score: 0</div>
-  <div id="lives" style="margin-bottom: 1em;"></div>
-  <div id="note-track"></div>
-  <div id="score"></div>
-  <div id="feedback"></div>
-  <button id="tapButton" class="tap-button">Tap!</button>
-  <br>
-  <button class="home-button" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
+{% extends "layout.html" %}
 
-  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
-</body>
-</html>
+{% block content %}
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+
+  <div>
+    <h1>Game Mode</h1>
+    <div id="score" style="font-size: 1.2em; margin-bottom: 0.5em;">Score: 0</div>
+    <div id="lives" style="margin-bottom: 1em;"></div>
+    <div id="note-track"></div>
+    <div id="score"></div>
+    <div id="feedback"></div>
+    <button id="tapButton" class="tap-button">Tap!</button>
+    <br>
+    <button class="home-button" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
+
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+  </div>
+
+{% endblock %}

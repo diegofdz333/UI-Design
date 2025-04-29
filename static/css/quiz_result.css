@@ -8,7 +8,7 @@ h1 {
   margin-bottom: 2em;
 }
 
-.btn {
+.button {
   display: block;
   width: 200px;
   margin: 0.5em auto;
@@ -18,8 +18,4 @@ h1 {
   font-size: 1em;
   text-decoration: none;
   transition: background-color 0.2s;
-}
-
-.btn:hover {
-  background-color: #e0e0e0;
 }
