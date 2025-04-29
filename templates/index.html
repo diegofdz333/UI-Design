@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Rhythm Rhythm</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
@@ -70,7 +71,7 @@
   </svg>
   
   <h1 style="font-size: 3em; margin-top: 2em;" id="title">Rhythm Rhythm</h1>
-  <a href="{{ url_for('game') }}" class="button" id="start-button">Start Game</a>
-  <a href="{{ url_for('quiz') }}" class="button">Quiz</a>
+  <button class="button" id="start-button" onclick="window.location='{{ url_for('game') }}'">Play Game</button>
+  <button class="button" onclick="window.location='{{ url_for('quiz') }}'">Quiz</button>
 </body>
 </html>

@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>Rhythm Rhythm - Quiz Summary</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz_result.css') }}">
 </head>
 <body>
   <h1>Quiz Summary</h1>
   <div id="score">You got {{ score }} / 4 correct!</div>
 
-  <a href="{{ url_for('quiz') }}" class="btn">Redo Quiz</a>
-  <a href="{{ url_for('homepage') }}" class="btn">Quit to Homescreen</a>
+  <button class="btn" onclick="window.location='{{ url_for('quiz') }}'">Redo Quiz</button>
+  <button class="btn" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
 
   <script src="{{ url_for('static', filename='js/quiz_result.js') }}"></script>
 </body>
