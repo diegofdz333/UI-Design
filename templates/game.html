@@ -6,10 +6,12 @@
 
   <div>
     <h1>Game Mode</h1>
+    <div id="stage-label" class="stage-label">Demo</div>
     <div id="score" style="font-size: 1.2em; margin-bottom: 0.5em;">Score: 0</div>
     <div id="lives" style="margin-bottom: 1em;"></div>
-    <div id="note-track"></div>
-    <div id="score"></div>
+    <div id="note-track" style="position: relative;">
+      <img id="character" src="/static/images/player.png" class="character hidden" />
+    </div>      
     <div id="feedback"></div>
     <button id="tapButton" class="tap-button">Tap!</button>
     <br>
