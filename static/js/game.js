@@ -5,6 +5,9 @@ let signature = [];
 let sigLength = 6;
 let tempo = 500;
 
+let introTimeouts = [];
+let playingIntro = false;
+
 function generateSignature(length = 6) {
   const sig = [];
   for (let i = 0; i < length; i++) {
@@ -55,27 +58,92 @@ function playIntermissionAudio(wait = 0) {
 
 function playQueue() {
   feedback.textContent = "Listen carefully!";
+
+  for (let i = 0; i < signature.length; i++) {
+    setTimeout(() => {
+      // highlight current note
+      const img = noteTrack.children[i];
+      if (signature[i] === 1 && img) {
+        img.src = redNoteImage;
+        setTimeout(() => {
+          img.src = noteImage;
+        }, threshold * 2);
+      }
+    }, i * tempo);
+  }
+
   for (let i = 0; i < sigLength; i++) {
     setTimeout(() => {
       playAudio("/static/audio/tap.wav", 0.2);
-    }, i * tempo);
+    }, i * tempo + threshold);
     if (signature[i] === 1) {
       setTimeout(() => {
         playAudio("/static/audio/note.mp3");
-      }, i * tempo);
+      }, i * tempo + threshold);
     }
   }
 }
 
-function startGame() {
-  console.log("Start Game")
+function playIntro() {
+  playingIntro = true;
+  let waitTime = 0;
+  console.log(1)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "Welcome to Rhythm Rhythm!";
+  }, waitTime));
+  waitTime += 5000;
+  console.log(2)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "In this game you will need to click the \"Tap!\" buttor or spacebar to the rhythm";
+  }, waitTime));
+  waitTime += 5000;
+  console.log(3)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "Each round, you will see the signature you need to follow";
+    signature = generateSignature(6);
+    updateUI();
+    renderTrack();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "You will then hear what you have to replicate after a queue.";
+    playIntermissionAudio();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    playIntermissionAudio()
+    setTimeout(() => playQueue(), 1000);
+  }, waitTime));
+  waitTime += 7000;
+  introTimeouts.push(setTimeout(() => {
+    console.log("Intro")
+    feedback.textContent = "After another sound prompt you will have to replicate what you heard";
+    playIntermissionAudio();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    console.log("Intro 2")
+    feedback.textContent = "Good Luck!";
+  }, waitTime));
+  waitTime += 5000;
+ 
+  introTimeouts.push(setTimeout(() => {
+    if (playingIntro) {
+      startGame();
+    }
+    playingIntro = false;
+  }, waitTime));
+}
+
+function startGame(round = 0) {
+  console.log("Start Game: " + round)
   signature = generateSignature(sigLength);
   updateUI();
   renderTrack();
 
   playIntermissionAudio();
 
-  setTimeout(() => playQueue(), 1000);
+  setTimeout(() => playQueue(), 1000 - threshold);
 
   playIntermissionAudio(signature.length * tempo + 1000)
 
@@ -110,7 +178,6 @@ function startGame() {
         // play backing tap noise
         playAudio("/static/audio/tap.wav", 0.2);
         const now = performance.now();
-        console.log(now - expectedHits[i].time)
 
         setTimeout(() => {
           if (!expectedHits[i].hit && !expectedHits[i].missed) {
@@ -126,7 +193,7 @@ function startGame() {
     setTimeout(() => {
       gameRunning = false;
       feedback.textContent = "Done!";
-    endRound();
+    endRound(round);
     }, signature.length * tempo);
   }, signature.length * tempo + 1000 + tempo);
 }
@@ -168,23 +235,31 @@ function registerTap() {
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
+    skipIntro = true;
     registerTap();
+  }
+  if (playingIntro) {
+    playingIntro = false;
+    for (timeout in introTimeouts) {
+      clearTimeout(timeout);
+    }
+    startGame();
   }
 });
 
 tapButton.addEventListener("click", registerTap);
 
 // Auto start game
-startGame();
+playIntro();
 
-function endRound() {
+function endRound(round = 0) {
   gameRunning = false;
   if (lives <= 0) {
     feedback.textContent = "Game Over!";
     return;
   }
 
-  score += ( 100 * (550 - tempo)) * sigLength;
+  score += (550 - tempo) * sigLength;
   level += 1;
 
   if (level % 3 == 0) {
@@ -197,7 +272,7 @@ function endRound() {
 
   updateUI();
   setTimeout(() => {
-    startGame(); // loop to next level
+    startGame(round + 1); // loop to next level
   }, 1500);
 }
 
