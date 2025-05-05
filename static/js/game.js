@@ -8,14 +8,6 @@ let tempo = 500;
 let introTimeouts = [];
 let playingIntro = false;
 
-function generateSignature(length = 6) {
-  const sig = [];
-  for (let i = 0; i < length; i++) {
-    sig.push(Math.random() < 0.75 ? 1 : 0); // 75% chance for a note
-  }
-  return sig;
-}
-
 const noteImage = "/static/images/quarterNote.png";
 const restImage = "/static/images/restNote.png";
 const redNoteImage = "/static/images/quarterNoteRed.png";
@@ -31,6 +23,14 @@ const character = document.getElementById("character");
 let expectedHits = [];
 let playStartTime;
 let gameRunning = false;
+
+function generateSignature(length = 6) {
+  const sig = [];
+  for (let i = 0; i < length; i++) {
+    sig.push(Math.random() < 0.75 ? 1 : 0); // 75% chance for a note
+  }
+  return sig;
+}
 
 function playAudio(src, vol = 1.0) {
   const audio = new Audio(src);
@@ -48,56 +48,108 @@ function renderTrack() {
   }
 }
 
+const intermissionSteps = 4;
 function playIntermissionAudio(wait = 0) {
   setTimeout(() => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < intermissionSteps; i++) {
       setTimeout(() => {
-        playAudio("/static/audio/tap.wav", 0.2 * (i + 1));
-      }, i * 150);
-    }
-  }, wait);
-}
-
-function playQueue() {
-  feedback.textContent = "Listen carefully!";
-  for (let i = 0; i < sigLength; i++) {
-    setTimeout(() => {
-      const img = noteTrack.children[i];
-      if (img) {
-        img.classList.add("highlighted");
-        setTimeout(() => img.classList.remove("highlighted"), threshold * 2);
-      }
-      if (signature[i] === 1) {
-        playAudio("/static/audio/note.mp3");
-      }
-      playAudio("/static/audio/tap.wav", 0.2);
-    }, i * tempo);
-    if (signature[i] === 1) {
-      setTimeout(() => {
-        playAudio("/static/audio/note.mp3");
+        playAudio("/static/audio/tap.wav", 0.2);
       }, i * tempo);
     }
-  }
+  }, wait);
+  return intermissionSteps * tempo;
 }
 
-function startGame() {
+function playQueue(wait = 0) {
+  setTimeout(() => {
+    feedback.textContent = "Listen carefully!";
+    for (let i = 0; i < sigLength; i++) {
+      setTimeout(() => {
+        const img = noteTrack.children[i];
+        if (img) {
+          img.classList.add("highlighted");
+          setTimeout(() => img.classList.remove("highlighted"), threshold * 2);
+        }
+      }, i * tempo);
+      setTimeout(() => {
+        playAudio("/static/audio/tap.wav", 0.2);
+        if (signature[i] === 1) 
+          playAudio("/static/audio/note.mp3");
+      }, i * tempo + threshold);
+    }
+  }, wait - threshold);
+  return sigLength * tempo;
+}
+
+function playIntro() {
+  playingIntro = true;
+  let waitTime = 0;
+  console.log(1)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "Welcome to Rhythm Rhythm!";
+  }, waitTime));
+  waitTime += 5000;
+  console.log(2)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "In this game you will need to click the \"Tap!\" buttor or spacebar to the rhythm";
+  }, waitTime));
+  waitTime += 5000;
+  console.log(3)
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "Each round, you will see the signature you need to follow";
+    signature = generateSignature(6);
+    updateUI();
+    renderTrack();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    feedback.textContent = "You will then hear what you have to replicate after a queue.";
+    playIntermissionAudio();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    let wait2 = playIntermissionAudio()
+    playQueue(wait2)
+  }, waitTime));
+  waitTime += 7000;
+  introTimeouts.push(setTimeout(() => {
+    console.log("Intro")
+    feedback.textContent = "After another sound prompt you will have to replicate what you heard";
+    playIntermissionAudio();
+  }, waitTime));
+  waitTime += 5000;
+  introTimeouts.push(setTimeout(() => {
+    console.log("Intro 2")
+    feedback.textContent = "Good Luck!";
+  }, waitTime));
+  waitTime += 5000;
+ 
+  introTimeouts.push(setTimeout(() => {
+    if (playingIntro) {
+      startGame();
+    }
+    playingIntro = false;
+  }, waitTime));
+}
+
+function startGame(round = 0) {
   console.log("Start Game")
   signature = generateSignature(sigLength);
   updateUI();
   renderTrack();
 
-  playIntermissionAudio();
+  let wait = 0;
 
-  setTimeout(() => playQueue(), 1000 - threshold);
-
-  playIntermissionAudio(signature.length * tempo + 1000);
+  wait += playIntermissionAudio();
+  wait += playQueue(wait);  
+  wait += playIntermissionAudio(wait);
 
   // Start user input phase after playback
   setTimeout(() => {
     feedback.textContent = "Now you try! Press SPACE or Tap!";
     stageLabel.textContent = "🎮 Your Turn";
     gameRunning = true;
-    playStartTime = performance.now() + tempo;
+    playStartTime = performance.now();
 
     expectedHits = signature.map((val, i) =>
       val === 1
@@ -112,13 +164,13 @@ function startGame() {
     for (let i = 0; i < signature.length; i++) {
       setTimeout(() => {
         const img = noteTrack.children[i];
-        if (signature[i] === 1 && img) {
-          img.src = redNoteImage;
+        if (img) {
+          img.classList.add("highlighted");
           setTimeout(() => {
-            img.src = noteImage;
+            img.classList.remove("highlighted")
           }, threshold * 2);
         }
-      }, (i + 1) * tempo - threshold);
+      }, i * tempo - threshold);
     }
 
     for (let i = 0; i < signature.length; i++) {
@@ -134,15 +186,15 @@ function startGame() {
             loseLife();
           }
         }, threshold + 50);
-      }, (i + 1) * tempo);
+      }, i * tempo);
     }
 
     setTimeout(() => {
       gameRunning = false;
       feedback.textContent = "Done!";
-    endRound();
+    endRound(round);
     }, signature.length * tempo);
-  }, signature.length * tempo + 1000 + tempo);
+  }, wait);
 }
 
 function registerTap() {
@@ -197,26 +249,6 @@ function moveCharacterTo(noteElement) {
   setTimeout(() => character.classList.remove("jump"), 300);
 }
 
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    e.preventDefault();
-    skipIntro = true;
-    registerTap();
-  }
-  if (playingIntro) {
-    playingIntro = false;
-    for (timeout in introTimeouts) {
-      clearTimeout(timeout);
-    }
-    startGame();
-  }
-});
-
-tapButton.addEventListener("click", registerTap);
-
-// Auto start game
-startGame();
-
 function endRound(round = 0) {
   gameRunning = false;
   if (lives <= 0) {
@@ -238,8 +270,8 @@ function endRound(round = 0) {
 
   updateUI();
   setTimeout(() => {
-    startGame(); // loop to next level
-  }, 1500);
+    startGame(round + 1); // loop to next level
+  }, 0);
 }
 
 function loseLife() {
@@ -330,3 +362,23 @@ function moveCharacterTo(noteElement) {
   character.classList.add("jump");
   setTimeout(() => character.classList.remove("jump"), 300);
 }
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    skipIntro = true;
+    registerTap();
+  }
+  if (playingIntro) {
+    playingIntro = false;
+    for (timeout in introTimeouts) {
+      clearTimeout(timeout);
+    }
+    startGame();
+  }
+});
+
+tapButton.addEventListener("click", registerTap);
+
+// Auto start game
+playIntro();
