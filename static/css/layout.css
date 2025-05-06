@@ -4,6 +4,12 @@
 }
 
 .navbar-brand {
-    font-size: large;
+    font-size: x-large;
     color: white;
+    width: 8em;
+    text-align: center;
+}
+
+.navbar-section {
+    align-items: center;
 }

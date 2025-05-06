@@ -74,7 +74,7 @@
     
     <h1 id="title">Rhythm Rhythm</h1>
     <button class="button" id="start-button" onclick="window.location='{{ url_for('game') }}'">Play Game</button>
-    <button class="button" onclick="window.location='{{ url_for('quiz') }}'">Quiz</button>
+    <button class="button" id="quiz-button" onclick="window.location='{{ url_for('quiz') }}'">Quiz</button>
 
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
   </div>

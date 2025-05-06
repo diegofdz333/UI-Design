@@ -13,6 +13,8 @@ const restImage = "/static/images/restNote.png";
 const redNoteImage = "/static/images/quarterNoteRed.png";
 
 const threshold = 150;
+const invisibilityTime = 500;
+let isInvisible = false;
 
 const noteTrack = document.getElementById("note-track");
 const feedback = document.getElementById("feedback");
@@ -49,11 +51,13 @@ function renderTrack() {
 }
 
 const intermissionSteps = 4;
-function playIntermissionAudio(wait = 0) {
+function playIntermissionAudio(wait = 0, showCountdown = false) {
   setTimeout(() => {
     for (let i = 0; i < intermissionSteps; i++) {
       setTimeout(() => {
         playAudio("/static/audio/tap.wav", 0.2);
+        if (showCountdown)
+          feedback.textContent = 4 - i;
       }, i * tempo);
     }
   }, wait);
@@ -142,7 +146,7 @@ function startGame(round = 0) {
 
   wait += playIntermissionAudio();
   wait += playQueue(wait);  
-  wait += playIntermissionAudio(wait);
+  wait += playIntermissionAudio(wait, true);
 
   // Start user input phase after playback
   setTimeout(() => {
@@ -257,7 +261,7 @@ function endRound(round = 0) {
     return;
   }
 
-  score += ( 100 * (550 - tempo)) * sigLength;
+  score += (550 - tempo) * sigLength;
   level += 1;
 
   if (level % 3 === 0) {
@@ -275,8 +279,12 @@ function endRound(round = 0) {
 }
 
 function loseLife() {
-  lives--;
-  updateUI();
+  if (!isInvisible) {
+    lives--;
+    updateUI();
+    isInvisible = true;
+    setTimeout(() => {isInvisible = false;}, invisibilityTime);
+  }
   if (lives <= 0) {
     gameRunning = false;
     feedback.textContent = "Game Over!";
