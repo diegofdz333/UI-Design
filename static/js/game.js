@@ -1,9 +1,17 @@
-let lives = 5;
-let score = 0;
-let level = 0;
+const LIVES = 5;
+const SCORE = 0;
+const LEVEL = 0;
+const SIG_LENGTH = 6;
+const TEMPO = 500;
+
+let lives = LIVES;
+let score = SCORE;
+let level = LEVEL;
 let signature = [];
-let sigLength = 6;
-let tempo = 500;
+let sigLength = SIG_LENGTH;
+let tempo = TEMPO;
+
+let livesLostInRound = 0;
 
 let introTimeouts = [];
 let playingIntro = false;
@@ -25,6 +33,16 @@ const character = document.getElementById("character");
 let expectedHits = [];
 let playStartTime;
 let gameRunning = false;
+let gameEnded = false;
+
+function resetStats() {
+  lives = LIVES;
+  score = SCORE;
+  level = LEVEL;
+  signature = [];
+  sigLength = SIG_LENGTH;
+  tempo = TEMPO;
+}
 
 function generateSignature(length = 6) {
   const sig = [];
@@ -55,7 +73,7 @@ function playIntermissionAudio(wait = 0, showCountdown = false) {
   setTimeout(() => {
     for (let i = 0; i < intermissionSteps; i++) {
       setTimeout(() => {
-        playAudio("/static/audio/tap.wav", 0.2);
+        playAudio("/static/audio/tap.wav", 0.1);
         if (showCountdown)
           feedback.textContent = 4 - i;
       }, i * tempo);
@@ -76,7 +94,7 @@ function playQueue(wait = 0) {
         }
       }, i * tempo);
       setTimeout(() => {
-        playAudio("/static/audio/tap.wav", 0.2);
+        playAudio("/static/audio/tap.wav", 0.1);
         if (signature[i] === 1) 
           playAudio("/static/audio/note.mp3");
       }, i * tempo + threshold);
@@ -88,14 +106,14 @@ function playQueue(wait = 0) {
 function playIntro() {
   playingIntro = true;
   let waitTime = 0;
-  console.log(1)
+  tapButton.textContent = "Tap! / (Skip Intro)"
   introTimeouts.push(setTimeout(() => {
     feedback.textContent = "Welcome to Rhythm Rhythm!";
   }, waitTime));
   waitTime += 5000;
   console.log(2)
   introTimeouts.push(setTimeout(() => {
-    feedback.textContent = "In this game you will need to click the \"Tap!\" buttor or spacebar to the rhythm";
+    feedback.textContent = "In this game you will need to click the \"Tap!\" button or spacebar to the rhythm";
   }, waitTime));
   waitTime += 5000;
   console.log(3)
@@ -137,6 +155,8 @@ function playIntro() {
 }
 
 function startGame(round = 0) {
+  livesLostInRound = 0;
+  tapButton.textContent = "Tap!"
   console.log("Start Game")
   signature = generateSignature(sigLength);
   updateUI();
@@ -179,7 +199,7 @@ function startGame(round = 0) {
 
     for (let i = 0; i < signature.length; i++) {
       setTimeout(() => {
-        playAudio("/static/audio/tap.wav", 0.2);
+        playAudio("/static/audio/tap.wav", 0.1);
         const now = performance.now();
         console.log(now - expectedHits[i].time)
 
@@ -199,41 +219,6 @@ function startGame(round = 0) {
     endRound(round);
     }, signature.length * tempo);
   }, wait);
-}
-
-function registerTap() {
-  if (!gameRunning) return;
-  const now = performance.now();
-  let miss = true;
-
-  for (let i = 0; i < expectedHits.length; i++) {
-    const expected = expectedHits[i];
-    if (expected && !expected.hit && Math.abs(now - expected.time) <= threshold) {
-      expected.hit = true;
-      miss = false;
-      playAudio("/static/audio/note.mp3");
-      moveCharacterTo(noteTrack.children[i]);
-      break;
-    }
-    if (expected && expected.miss && Math.abs(now - expected.time) <= threshold * 2) {
-      miss = false;
-      break;
-    }
-  }
-
-  if (miss) {
-    for (const expected of expectedHits) {
-      if (expected && !expected.miss && Math.abs(now - expected.time) <= threshold * 2) {
-        expected.miss = true;
-        break;
-      }
-    }
-
-    playAudio("/static/audio/fail.mp3");
-    loseLife();
-    feedback.textContent = "Miss!";
-    setTimeout(() => (feedback.textContent = ""), 500);
-  }
 }
 
 function moveCharacterTo(noteElement) {
@@ -261,7 +246,7 @@ function endRound(round = 0) {
     return;
   }
 
-  score += (550 - tempo) * sigLength;
+  score += (550 - tempo) * (sigLength - livesLostInRound);
   level += 1;
 
   if (level % 3 === 0) {
@@ -281,14 +266,17 @@ function endRound(round = 0) {
 function loseLife() {
   if (!isInvisible) {
     lives--;
+    livesLostInRound++;
     updateUI();
     isInvisible = true;
     setTimeout(() => {isInvisible = false;}, invisibilityTime);
   }
   if (lives <= 0) {
     gameRunning = false;
+    gameEnded = true;
     feedback.textContent = "Game Over!";
     stageLabel.textContent = "🛑 Game Over";
+    tapButton.textContent = "Restart"
   }
 }
 
@@ -311,6 +299,19 @@ function updateUI() {
 }
 
 function registerTap() {
+  skipIntro = true;
+  if (playingIntro) {
+    playingIntro = false;
+    for (timeout in introTimeouts) {
+      clearTimeout(timeout);
+    }
+    startGame();
+  }
+  if (gameEnded) {
+    gameEnded = false;
+    resetStats();
+    startGame();
+  }
   if (!gameRunning) return;
   const now = performance.now();
 
@@ -374,15 +375,7 @@ function moveCharacterTo(noteElement) {
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
-    skipIntro = true;
     registerTap();
-  }
-  if (playingIntro) {
-    playingIntro = false;
-    for (timeout in introTimeouts) {
-      clearTimeout(timeout);
-    }
-    startGame();
   }
 });
 
