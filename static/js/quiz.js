@@ -3,7 +3,6 @@
 
 const questions = [
   {
-    // Original Question 1: one-measure rhythm (quarter, eighth, quarter, quarter)
     correct: 2,
     images: [
       "/static/quizChoices/rhythm-1.png",
@@ -13,7 +12,6 @@ const questions = [
     ]
   },
   {
-    // Question 2: syncopation on 1, & of 2, 3, 4
     correct: 0,
     images: [
       "/static/quizChoices/rhythm-1.png",
@@ -23,7 +21,6 @@ const questions = [
     ]
   },
   {
-    // Question 3: off-beat accents (& of 1, 2, & of 3, 4)
     correct: 1,
     images: [
       "/static/quizChoices/rhythm-4.png",
@@ -33,7 +30,6 @@ const questions = [
     ]
   },
   {
-    // Question 4: half-note pulse (beats 1 and 3 only)
     correct: 3,
     images: [
       "/static/quizChoices/rhythm-3.png",
@@ -46,11 +42,58 @@ const questions = [
 
 let currentQuestion = 0;
 let score = 0;
-const playAudioButton = document.getElementById("play-audio");
-const questionHeader = document.getElementById("question-header");
-const optionsContainer = document.getElementById("options-container");
 
-let playing = false;
+// we'll store this each time we shuffle
+let shuffledCorrectIndex = null;
+
+const playAudioButton   = document.getElementById("play-audio");
+const questionHeader    = document.getElementById("question-header");
+const optionsContainer  = document.getElementById("options-container");
+const quizContainer     = document.querySelector(".quiz-container");
+
+// positioning context for Next button
+quizContainer.style.position = "relative";
+
+// ——— Utility: Fisher–Yates shuffle ———
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ——— Create Next Question button ———
+const nextButton = document.createElement("button");
+nextButton.id          = "next-question-button";
+nextButton.textContent = "Next Question";
+Object.assign(nextButton.style, {
+  position:     "absolute",
+  bottom:       "0",
+  borderRadius: "6px",   // match Quit button
+  display:      "none"
+});
+quizContainer.appendChild(nextButton);
+
+// compute horizontal position once
+const GAP = 10; // px
+const gridLeft  = optionsContainer.offsetLeft;
+const gridWidth = optionsContainer.offsetWidth;
+nextButton.style.left = `${gridLeft + gridWidth + GAP}px`;
+
+// advance logic
+nextButton.addEventListener("click", () => {
+  nextButton.style.display = "none";
+  if (currentQuestion < questions.length - 1) {
+    currentQuestion++;
+    renderQuestion();
+  } else {
+    window.location.href = `/quiz_result?score=${score}`;
+  }
+});
+
+let playing  = false;
 let timeouts = [];
 
 function clearScheduled() {
@@ -59,24 +102,24 @@ function clearScheduled() {
 }
 
 function playRhythm(offsetBeats) {
-  const bpm = 60;
+  const bpm    = 60;
   const beatMs = 60000 / bpm;
 
-  // Metronome click on every beat
+  // metronome clicks
   for (let i = 0; i < 4; i++) {
     timeouts.push(setTimeout(() => {
       new Audio("/static/audio/tap.wav").play();
     }, i * beatMs));
   }
 
-  // Play notes at given offsets
+  // melody notes
   offsetBeats.forEach(beat => {
     timeouts.push(setTimeout(() => {
       new Audio("/static/audio/note.mp3").play();
     }, beat * beatMs));
   });
 
-  // Reset after bar
+  // reset icon after bar
   timeouts.push(setTimeout(() => {
     playing = false;
     playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
@@ -84,21 +127,32 @@ function playRhythm(offsetBeats) {
 }
 
 function getPatternOffsets(idx) {
-  const patterns = [
-    [0, 2, 2.5, 3],
-    [0, 1, 1.5, 3],
-    [0, 1.5, 2, 3], 
-    [0, 1, 1.5, 2, 3]
-  ];
-  return patterns[idx];
+  return [
+    [0, 2,   2.5, 3],
+    [0, 1,   1.5, 3],
+    [0, 1.5, 2,   3],
+    [0, 1,   1.5, 2, 3]
+  ][idx];
 }
 
 function renderQuestion() {
+  nextButton.style.display = "none";
+
   const q = questions[currentQuestion];
+
+  // 1) grab the correct image src
+  const correctSrc = q.images[q.correct];
+
+  // 2) shuffle all images
+  const shuffled = shuffleArray(q.images);
+
+  // 3) find where the correct one landed
+  shuffledCorrectIndex = shuffled.indexOf(correctSrc);
+
+  // render
   questionHeader.textContent = `Question ${currentQuestion + 1}: What do you hear?`;
   optionsContainer.innerHTML = "";
-
-  q.images.forEach((src, idx) => {
+  shuffled.forEach((src, idx) => {
     const img = document.createElement("img");
     img.src = src;
     img.onclick = () => handleAnswer(idx);
@@ -109,52 +163,34 @@ function renderQuestion() {
   playing = false;
   playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
-  // update progress bar here:
-  document.getElementById("progress-bar").textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
-
-  // Update progress text
-document.getElementById("progress-bar").textContent =
-`Question ${currentQuestion + 1} of ${questions.length}`;
-
-// Update visual progress fill
-const percent = ((currentQuestion + 1) / questions.length) * 100;
-document.getElementById("visual-fill").style.width = `${percent}%`;
+  // update progress
+  document.getElementById("progress-bar").textContent =
+    `Question ${currentQuestion + 1} of ${questions.length}`;
+  const pct = ((currentQuestion + 1) / questions.length) * 100;
+  document.getElementById("visual-fill").style.width = `${pct}%`;
 }
 
-
 function handleAnswer(selectedIndex) {
-  const q = questions[currentQuestion];
+  // disable all further clicks
+  document.querySelectorAll(".options img").forEach(img => img.onclick = null);
+
+  // correct / wrong highlight
   const images = document.querySelectorAll(".options img");
-
-  // Mark all images unclickable
-  images.forEach(img => {
-    img.onclick = null;
-  });
-
-  // Highlight selected
-  if (selectedIndex === q.correct) {
+  if (selectedIndex === shuffledCorrectIndex) {
     images[selectedIndex].classList.add("correct");
     score++;
   } else {
     images[selectedIndex].classList.add("wrong");
-    images[q.correct].classList.add("correct"); // show correct one
+    images[shuffledCorrectIndex].classList.add("correct");
   }
 
-  currentQuestion++;
   clearScheduled();
   playing = false;
   playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
 
-  // Proceed to next question after short delay
-  setTimeout(() => {
-    if (currentQuestion < questions.length) {
-      renderQuestion();
-    } else {
-      window.location.href = `/quiz_result?score=${score}`;
-    }
-  }, 1000); // 1 second pause to show feedback
+  // show the Next button
+  nextButton.style.display = "inline-block";
 }
-
 
 playAudioButton.onclick = () => {
   if (playing) {
@@ -163,13 +199,10 @@ playAudioButton.onclick = () => {
     playAudioButton.style.backgroundImage = "url('/static/images/audioButton.png')";
     return;
   }
-
   playing = true;
   playAudioButton.style.backgroundImage = "url('/static/images/stopButton.png')";
-
-  const offsets = getPatternOffsets(currentQuestion);
-  playRhythm(offsets);
+  playRhythm(getPatternOffsets(currentQuestion));
 };
 
-// Start
+// start the first question
 renderQuestion();
