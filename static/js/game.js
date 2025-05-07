@@ -348,7 +348,6 @@ function registerTap() {
     feedback.textContent = "Miss!";
     noteElement.classList.add("missed-hit");
     setTimeout(() => {
-      feedback.textContent = "";
       noteElement.classList.remove("missed-hit");
     }, 500);
   }
