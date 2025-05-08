@@ -1,27 +1,48 @@
+/* static/css/game.css */
+
+/* Base Elements ----------------------------------------------------- */
 .note-image {
   height: 80px;
   margin: 0.5em;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 
 #feedback {
   margin-top: 1em;
   font-size: 1.2em;
-  color: #cc0000;
+  color: #222;
 }
 
 #lives {
   min-height: 2em;
 }
 
-.tap-button {
-  padding: 1em 8em;
+#tapButton,
+.tap-button,
+.home-button {
+  padding: 1em 4em;
   font-size: 1.2em;
   margin-top: 2em;
-  border-radius: 10px;
+  border: 2px solid #444;
+  background: #fff;
+  color: #222;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+#tapButton:hover,
+.tap-button:hover,
+.home-button:hover {
+  background: #eee;
 }
 
-#note-track {
+.hidden {
+  display: none;
+}
+
+#note-track,
+.note-track {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,64 +51,139 @@
   position: relative;
 }
 
-.home-button {
-  margin-top: 2em;
-  display: inline-block;
-  text-decoration: none;
-  padding: 0.5em 1em;
-  border-radius: 6px;
-}
-
-#overlay {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  font-size: 2em;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-}
-
-.hidden {
-  display: none;
-}
-
-.highlighted {
-  filter: brightness(2);
-  transform: scale(1.1);
-  transition: all 0.2s;
-}
-
-.stage-label {
+.stage-label,
+#stage-label {
   font-size: 1.5em;
+  color: #333;
   margin-bottom: 1em;
-  color: #555;
   font-weight: bold;
 }
 
-.character {
-  position: absolute;
-  width: 60px;        /* Adjust to match your note size */
-  height: 60px;
-  transition: transform 0.3s ease;
-  z-index: 10;
-  pointer-events: none;
+/* System vs User Cues ------------------------------------------------ */
+.system-hit {
+  filter: brightness(2);
+  transform: scale(1.3);
+  transition: 0.25s;
 }
-
-.jump {
-  transform: translateY(-60px) scale(1.2);  /* Jump upward */
+.perfect-hit {
+  box-shadow: 0 0 8px 2px #0f0;
 }
-
-.correct-hit {
-  box-shadow: 0 0 10px 3px #4CAF50;
-  border-radius: 8px;
+.almost-hit {
+  box-shadow: 0 0 8px 2px #ff0;
 }
-
 .missed-hit {
-  filter: grayscale(1);
-  opacity: 0.5;
+  box-shadow: 0 0 8px 2px #f00;
+  opacity: 0.6;
 }
 
+/* Overlay & Tutorial ------------------------------------------------- */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.overlay.tutorial {
+  pointer-events: all;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 10vh;
+  gap: 2em;
+}
+
+.highlight-target {
+  filter: brightness(2.5);
+  box-shadow: 0 0 16px 4px rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  transform: scale(1.15);
+  transition: 0.25s;
+}
+
+.tooltip {
+  position: absolute;
+  max-width: 300px;
+  background: #fff;
+  color: #222;
+  padding: 1em;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+.tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tooltip-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+.btn-next,
+.btn-skip {
+  margin-left: 0.5em;
+  padding: 0.5em 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-next {
+  background: #222;
+  color: #fff;
+}
+.btn-skip {
+  background: transparent;
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Countdown ----------------------------------------------------------- */
+#countdown-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5em;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+
+/* Game Over Modal ----------------------------------------------------- */
+.gameover-box {
+  background: #fff;
+  padding: 2em;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 90%;
+  z-index: 1001;
+}
+.gameover-message {
+  font-size: 1.8em;
+  color: #222;
+  margin-bottom: 1em;
+}
+.gameover-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5em;
+  z-index: 1001;
+}
+
+.confirmed-hit {
+  outline: 4px solid #0f0;
+  border-radius: 10px;
+  box-shadow: 0 0 12px 3px #0f0;
+  transition: outline 0.3s ease, box-shadow 0.3s ease;
+}
