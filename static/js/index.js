@@ -1,5 +1,6 @@
 window.addEventListener('DOMContentLoaded', () => {
     const audio = new Audio('/static/audio/background.mp3');
+    audio.volume = 0.1;
     audio.loop = true;
     let isPlaying = false;
   

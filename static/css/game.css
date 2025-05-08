@@ -9,6 +9,10 @@
   color: #cc0000;
 }
 
+#lives {
+  min-height: 2em;
+}
+
 .tap-button {
   padding: 1em 8em;
   font-size: 1.2em;
