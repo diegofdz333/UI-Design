@@ -42,8 +42,8 @@ const playClickAt       = t => playBuffer(clickBuffer,     t, 0.3);
 const playSystemNoteAt  = t => playBuffer(systemBuffer,    t, 1.0);
 const playUserNoteAt    = t => playBuffer(userBuffer,      t, 1.0);
 const playCountdownAt   = t => playBuffer(countdownBuffer, t, 1.0);
-const playNumberAt = t => playBuffer(numberBuffer, t, 1.0);
-const playGoAt     = t => playBuffer(goBuffer,     t, 1.0);
+const playNumberAt = t => playBuffer(numberBuffer, t, 0.3);
+const playGoAt     = t => playBuffer(goBuffer,     t, 0.3);
 
 // Schedule a visual callback in sync with audio clock
 function scheduleVisual(audioTime, callback) {
@@ -464,8 +464,6 @@ function endRound() {
   const hits = expectedHits.reduce((sum, cell) =>
     sum + cell.hitFlags.filter(Boolean).length, 0
   );
-  const bonusPerHit = Math.max(0, 550 - beatDur * 1000);
-  score += bonusPerHit * hits;
   score = Math.max(0, score);  
   
   updateUI();
@@ -529,7 +527,7 @@ function renderPattern() {
 }
 
 function updateUI() {
-  scoreEl.textContent = `Score: ${score}`;
+  scoreEl.textContent = `Score: ${Math.round(score)}`;
   livesEl.innerHTML   = '';
   for (let i = 0; i < lives; i++) {
     const h = document.createElement('img');
@@ -577,7 +575,7 @@ function handleTap() {
       const cell = expectedHits[best.di];
       cell.hitFlags[best.ds] = true;
       cssClass = best.diff <= PERFECT_MS ? 'perfect-hit' : 'almost-hit';
-      score += cssClass === 'perfect-hit' ? 2 : 1;
+      score += cssClass === 'perfect-hit' ? 10 : 5;
     } else {
       const rel = (now - phaseStartTime) / beatDur;
       const nearest = Math.round(rel);
