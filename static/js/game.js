@@ -13,19 +13,20 @@ function ensureAudioContextResumed() {
 }
 
 // Buffers: click, system tone, user tone, countdown bell
-let clickBuffer, systemBuffer, userBuffer, countdownBuffer;
+let clickBuffer, systemBuffer, userBuffer, numberBuffer, goBuffer;
 async function loadAudio(url) {
   const resp = await fetch(url);
   const data = await resp.arrayBuffer();
   return await audioCtx.decodeAudioData(data);
 }
 Promise.all([
-  loadAudio('/static/audio/tap.wav'),        // metronome click
-  loadAudio('/static/audio/note.mp3'),       // system reference tone
-  loadAudio('/static/audio/user.mp3'),       // user feedback tone
-  loadAudio('/static/audio/countdown.mp3')   // countdown bell
+  loadAudio('/static/audio/tap.wav'),      // metronome click
+  loadAudio('/static/audio/note.mp3'),     // system reference tone
+  loadAudio('/static/audio/user.mp3'),     // user feedback tone
+  loadAudio('/static/audio/number.mp3'),   // countdown numbers (3,2,1)
+  loadAudio('/static/audio/go.mp3')        // countdown GO
 ]).then(buffers => {
-  [clickBuffer, systemBuffer, userBuffer, countdownBuffer] = buffers;
+  [clickBuffer, systemBuffer, userBuffer, numberBuffer, goBuffer] = buffers;
 });
 
 // Play with optional gain
@@ -41,6 +42,8 @@ const playClickAt       = t => playBuffer(clickBuffer,     t, 0.3);
 const playSystemNoteAt  = t => playBuffer(systemBuffer,    t, 1.0);
 const playUserNoteAt    = t => playBuffer(userBuffer,      t, 1.0);
 const playCountdownAt   = t => playBuffer(countdownBuffer, t, 1.0);
+const playNumberAt = t => playBuffer(numberBuffer, t, 1.0);
+const playGoAt     = t => playBuffer(goBuffer,     t, 1.0);
 
 // Schedule a visual callback in sync with audio clock
 function scheduleVisual(audioTime, callback) {
@@ -98,11 +101,6 @@ window.addEventListener('DOMContentLoaded', initGame);
 
 // Tutorial Overlay ----------------------------------------------------
 // static/js/game.js
-
-// Tutorial Overlay ----------------------------------------------------
-// Updated Tutorial Phase with Feedback Logic
-// static/js/game.js
-// ✅ Updated showTutorial function
 function showTutorial() {
   currentState = STATES.TUTORIAL;
   ensureAudioContextResumed();
@@ -331,34 +329,52 @@ function startDemo() {
 // COUNTDOWN -----------------------------------------------------------
 function startCountdown() {
   currentState = STATES.COUNTDOWN;
-  const overlayEl = document.createElement('div');
-  overlayEl.className = 'overlay';
+
+  // ✅ 模糊 header 区域
+  document.getElementById('header-row').classList.add('blurred');
+
   const counterEl = document.createElement('div');
   counterEl.id = 'countdown-number';
-  overlayEl.append(counterEl);
-  body.appendChild(overlayEl);
+  counterEl.style.cssText = `
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 6em;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    z-index: 1001;
+  `;
+  document.body.appendChild(counterEl);
 
   const startTime = audioCtx.currentTime + 0.05;
-  playCountdownAt(startTime);
-
   const steps = [
-    { text: '3', offset: 0.0 },
-    { text: '2', offset: 0.9 },
-    { text: '1', offset: 1.7 },
-    { text: 'GO!', offset: 2.5 }
+    { label: '3', play: playNumberAt },
+    { label: '2', play: playNumberAt },
+    { label: '1', play: playNumberAt },
+    { label: 'GO!', play: playGoAt }
   ];
-  steps.forEach(({ text, offset }) => {
-    const t = startTime + offset;
+
+  steps.forEach(({ label, play }, i) => {
+    const t = startTime + i * beatDur;
     scheduleVisual(t, () => {
-      counterEl.textContent = text;
-      if (text === 'GO!') {
-        setTimeout(() => overlayEl.remove(), 600);
-        // **one-beat buffer** before play begins:
-        scheduleVisual(t + beatDur + 0.1, startPlay);
+      counterEl.textContent = label;
+      counterEl.classList.remove('glow');
+      void counterEl.offsetWidth; // 触发 reflow 强制重新应用动画
+      if (label === 'GO!') {
+        counterEl.classList.add('glow');
       }
+      play(t);
     });
   });
+
+  scheduleVisual(startTime + steps.length * beatDur, () => {
+    counterEl.remove();
+    document.getElementById('header-row').classList.remove('blurred');
+    startPlay();
+  });
 }
+
 
 // PLAY Phase ----------------------------------------------------------
 function startPlay() {
@@ -448,7 +464,10 @@ function endRound() {
   const hits = expectedHits.reduce((sum, cell) =>
     sum + cell.hitFlags.filter(Boolean).length, 0
   );
-  score += (550 - beatDur*1000) * hits;
+  const bonusPerHit = Math.max(0, 550 - beatDur * 1000);
+  score += bonusPerHit * hits;
+  score = Math.max(0, score);  
+  
   updateUI();
   if (lives <= 0) return showGameOver();
 
@@ -478,7 +497,8 @@ function showGameOver() {
   box.className = 'gameover-box';
   const msg = document.createElement('div');
   msg.className = 'gameover-message';
-  msg.textContent = `Game Over! Final Score: ${score}`;
+  msg.innerHTML = `Game Over!<br>Final Score: ${Math.round(score)}`;
+  msg.style.cssText = 'color:#222;font-size:1.8em;margin-bottom:0.5em;line-height:1.4;text-align:center;';
   const btns = document.createElement('div');
   btns.className = 'gameover-buttons';
   const restart = document.createElement('button');
@@ -533,13 +553,16 @@ function handleTap() {
   if (currentState !== STATES.PLAY) return;
 
   const now = audioCtx.currentTime;
-  playUserNoteAt(now); // 播放音效立即安排，不等画面
+  playUserNoteAt(now); // 播放音效立即安排
 
-  // 使用 requestAnimationFrame 让视觉反馈延迟一帧，避免与音频播放不同步
   requestAnimationFrame(() => {
+    // ❗ 先移除所有旧的高亮反馈类，确保只有一个音符有视觉反馈
+    for (const note of noteTrack.children) {
+      note.classList.remove('perfect-hit', 'almost-hit', 'missed-hit');
+    }
+
     let best = { di: null, ds: null, diff: Infinity };
 
-    // 找到最接近当前时间的未命中 slot
     expectedHits.forEach((cell, i) => {
       cell.slots.forEach((t, j) => {
         if (!cell.hitFlags[j]) {
@@ -551,13 +574,11 @@ function handleTap() {
 
     let cssClass;
     if (best.di !== null && best.diff < ALMOST_MS) {
-      // 命中目标
       const cell = expectedHits[best.di];
-      cell.hitFlags[best.ds] = true; // ✅ 立即标记避免重复命中
+      cell.hitFlags[best.ds] = true;
       cssClass = best.diff <= PERFECT_MS ? 'perfect-hit' : 'almost-hit';
       score += cssClass === 'perfect-hit' ? 2 : 1;
     } else {
-      // 完全 miss：判定最近音符为错误高亮
       const rel = (now - phaseStartTime) / beatDur;
       const nearest = Math.round(rel);
       best.di = Math.max(0, Math.min(pattern.length - 1, nearest));
@@ -565,11 +586,9 @@ function handleTap() {
       loseLife();
     }
 
-    // ✅ 只高亮一个 note
     const img = noteTrack.children[best.di];
     img.classList.add(cssClass);
     updateUI();
-    setTimeout(() => img.classList.remove(cssClass), 300);
   });
 }
 
