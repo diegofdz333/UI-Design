@@ -121,7 +121,7 @@ function showTutorial() {
 
   const tapOverlay = document.createElement('button');
   tapOverlay.textContent = 'Tap! / Space';
-  tapOverlay.className = 'tap-button';
+  tapOverlay.className = 'tap-button tutorial-button';
   tapOverlay.style.margin = '1em 0';
   overlay.appendChild(tapOverlay);
 
@@ -472,7 +472,9 @@ function endRound() {
   const overlayEl = document.createElement('div');
   overlayEl.className = 'overlay';
   const msgEl = document.createElement('div');
-  msgEl.textContent = 'Round Complete!';
+  const nextLevel = level + 1;
+  const nextBPM = Math.min(BPM + (nextLevel - 1) * 20, 200);
+  msgEl.textContent = `Level ${nextLevel} — ${nextBPM} BPM`;
   msgEl.style.cssText = 'color:#fff;font-size:2em;';
   overlayEl.append(msgEl);
   body.append(overlayEl);

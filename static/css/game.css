@@ -21,21 +21,45 @@
 #tapButton,
 .tap-button,
 .home-button {
-  padding: 1em 4em;
+  background-color: black;
+  color: white;
+  padding: 1.2em 4em;
   font-size: 1.2em;
-  margin-top: 2em;
-  border: 2px solid #444;
-  background: #fff;
-  color: #222;
+  border: 2px solid black;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+  min-width: 320px
+}
+
+#tapButton:active,
+.tap-button:active,
+.home-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+
+.home-button {
+  background-color: black;
+  color: white;
+  padding: 1em 4em;       /* 稍微窄一点 */
+  font-size: 1.1em;
+  border: 2px solid black;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+  min-width: 240px;
 }
+
 #tapButton:hover,
 .tap-button:hover,
 .home-button:hover {
-  background: #eee;
+  background-color: #222;
 }
+
+
 
 .hidden {
   display: none;
@@ -246,3 +270,20 @@
 .note-image.missed-hit {
   animation: pop-miss 0.4s ease-out;
 }
+
+.tutorial-button {
+  background: #fff !important;
+  color: #000 !important;
+  border: 2px solid #000 !important;
+  min-width: 300px;
+  padding: 1.2em 4em;
+  font-size: 1.2em;
+  border-radius: 8px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+}
+.tutorial-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+

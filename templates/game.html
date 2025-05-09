@@ -19,9 +19,16 @@
     </div>      
 
     <div id="feedback"></div>
-    <button id="tapButton" class="tap-button">Tap!</button>
-    <br>
-    <button class="home-button" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
+
+    <!-- 分开的按钮容器 -->
+    <div style="margin-top: 2em;">
+      <button id="tapButton" class="tap-button" style="min-width: 300px;">Tap!</button>
+    </div>
+    <div style="margin-top: 1em;">
+      <button class="home-button" style="min-width: 220px;" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
+    </div>
+
+    
 
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
   </div>
