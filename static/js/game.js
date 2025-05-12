@@ -71,6 +71,7 @@ const STATES = {
 
 let currentState, lives, score, level, sigLen, beatDur, pattern;
 let expectedHits, phaseStartTime;
+let maxScore;
 
 // UI Elements ---------------------------------------------------------
 const body       = document.body;
@@ -467,7 +468,9 @@ function endRound() {
   score = Math.max(0, score);  
   
   updateUI();
-  if (lives <= 0) return showGameOver();
+  if (lives <= 0) {
+    return showGameOver();
+  }
 
   const overlayEl = document.createElement('div');
   overlayEl.className = 'overlay';
@@ -491,28 +494,48 @@ function endRound() {
 
 function showGameOver() {
   currentState = STATES.GAMEOVER;
-  const overlayEl = document.createElement('div');
-  overlayEl.className = 'overlay';
-  const box = document.createElement('div');
-  box.className = 'gameover-box';
-  const msg = document.createElement('div');
-  msg.className = 'gameover-message';
-  msg.innerHTML = `Game Over!<br>Final Score: ${Math.round(score)}`;
-  msg.style.cssText = 'color:#222;font-size:1.8em;margin-bottom:0.5em;line-height:1.4;text-align:center;';
-  const btns = document.createElement('div');
-  btns.className = 'gameover-buttons';
-  const restart = document.createElement('button');
-  restart.className = 'tap-button';
-  restart.textContent = 'Restart';
-  restart.onclick = () => { overlayEl.remove(); initGame(); };
-  const quit = document.createElement('button');
-  quit.className = 'home-button';
-  quit.textContent = 'Quit';
-  quit.onclick = () => { window.location = '/'; };
-  btns.append(restart, quit);
-  box.append(msg, btns);
-  overlayEl.append(box);
-  body.append(overlayEl);
+  
+  var json_data = {"score": score}
+  maxScore = score
+
+  fetch("/store_score", {
+      method: "POST",
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(json_data)
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log("response", data);
+      maxScore = data["data"]["score"]
+
+      const overlayEl = document.createElement('div');
+      overlayEl.className = 'overlay';
+      const box = document.createElement('div');
+      box.className = 'gameover-box';
+      const msg = document.createElement('div');
+      msg.className = 'gameover-message';
+      msg.innerHTML = `Game Over!<br>Final Score: ${Math.round(score)}<br>High Score: ${Math.round(maxScore)}`;
+      msg.style.cssText = 'color:#222;font-size:1.8em;margin-bottom:0.5em;line-height:1.4;text-align:center;';
+      const btns = document.createElement('div');
+      btns.className = 'gameover-buttons';
+      const restart = document.createElement('button');
+      restart.className = 'tap-button';
+      restart.textContent = 'Restart';
+      restart.onclick = () => { overlayEl.remove(); initGame(); };
+      const quit = document.createElement('button');
+      quit.className = 'home-button';
+      quit.textContent = 'Quit';
+      quit.onclick = () => { window.location = '/'; };
+      btns.append(restart, quit);
+      box.append(msg, btns);
+      overlayEl.append(box);
+      body.append(overlayEl);
+  })
+  .catch(error => {
+      console.error('Error:', error);
+  });
 }
 
 // Helpers -------------------------------------------------------------
