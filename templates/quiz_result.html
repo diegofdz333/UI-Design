@@ -7,7 +7,8 @@
   <div>
     <br>
     <h1>Quiz Summary</h1>
-    <div id="score">You got {{ score }} / 4 correct!</div>
+    <div class="score" id="score">You got {{ score }} / 4 correct!</div>
+    <div class="score" id="highScore">Highest Score : {{ high_score }}</div>
 
     <button class="button" onclick="window.location='{{ url_for('quiz') }}'">Redo Quiz</button>
     <button class="button" onclick="window.location='{{ url_for('homepage') }}'">Quit to Homescreen</button>
